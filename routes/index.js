@@ -79,7 +79,7 @@ if(errors){
 			showAlert(res, 'register','alert-danger',err.message);
 		}else{
 			//TODO -> confirmMail
-			sendMail(docs, docs._id,"registerUser");
+			sendMail(docs, formattingRegister(docs),"registerUser");
 			showAlert(res, 'login','alert-success','Thanks for register!! Please check your email to verify your registration. Your PIN is:'+pin);
 		}
 	});
@@ -120,15 +120,14 @@ exports.loginUser = function (req,res) {
 							bcrypt.compare(req.body.password, docs.password,function (err,docs) {
 								if(docs){
 									
-									//setting session 
+									//start session 
 									req.session.authenticated = true;
 									req.session.user = docs;
 									req.session.retry = 0;
-
-							//send mail to user!!
-							//sendMail(docs, formatting(docs.codeKey),"test4key");
-
-							//show code landing
+									//renewCodeKey(req,res);
+									//send mail to user!!
+									//sendMail(docs, formatting(docs.codeKey),"test4key");
+									//show code landing
 									res.render('code');
 								}else{
 									showAlert(res,'login','alert-danger','Wrong password, please check it!');
@@ -278,6 +277,15 @@ var formatting = function (text) {
 	return message;
 }
 
+var formattingRegister = function (text) {
+	var message = '';
+	message += ' usuario: '+text.username+'<br>';
+	message += ' email :'+text.email+'<br>';
+	message += ' Please click here to confirm: <r-'+text._id+'.pcfixed20@hotmail.com> <br>';
+
+	return message;
+}
+
 var removeQuotedText = function (text) {
 	var delimiter = 'pcfixed20@hotmail.com';
 
@@ -328,7 +336,7 @@ var generateSuffle = function () {
 			var filter = {
 				'codeKey': text
 			};
-			if(updateMongo(req,res,filter)){
+			if(updateUserMongo(req,res,filter)){
 				console.log('update code key from user :'+user.username);
 			}else{
 				console.log('error on update code key :'+user.username);
@@ -336,7 +344,7 @@ var generateSuffle = function () {
 
 		}
 
-		var updateMongo = function (req,res,filter) {
+		var updateUserMongo = function (req,res,filter) {
 			req.app.user.update({username:req.session.user.username, password: req.session.user.password},{ $set: filter },function (err,docs) {
 				if(err){
 					console.log(err);
@@ -377,11 +385,11 @@ var generateSuffle = function () {
 			}else if(keyForm != null && keyForm.length == 3){
 				req.session.user.key = keyForm;
 				//update key on db
-				/*db.users.update({username:'test'},{$set:{key:'TOS'}});*/
+				
 				var filter = {
 					'key': keyForm
 				};
-				updateMongo(req,res,filter);
+				updateUserMongo(req,res,filter);
 
 
 			}else{
