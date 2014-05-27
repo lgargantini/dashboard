@@ -1,0 +1,22 @@
+doctype html
+html
+	head
+		title Dashboard :: Restore
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.common.min.css')
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.bootstrap.min.css')
+		link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css')
+		link(rel='stylesheet', href='stylesheets/style.css')
+	body
+		.restore.well
+			h1 Enter your new Key please, and try to keep it safe!
+			include messages
+			hr
+			form(id='code-form', method='POST', action='/restore')
+				.form-group
+					label(for='key') key
+					input(type='text', name='key', class='form-control', id='key', 
+						placeholder='Enter your KEY here (only 3-letters and Uppercase)', maxlength=3, minlength=3)
+				.form-group
+					button.btn.btn-default New Key
+
+			a(href="logout") Logout

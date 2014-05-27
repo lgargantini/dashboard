@@ -1,0 +1,43 @@
+doctype html
+html
+	head
+		title Dashboard :: Code
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.common.min.css')
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.bootstrap.min.css')
+		link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css')
+		link(rel='stylesheet', href='stylesheets/style.css')
+	body
+		.code.well
+			h1 Please check your mail for our random groups code and introduce 3 digits.
+			h3 HOW? Find the random group where you find part of your key and introduce the group number in order...
+			include messages
+			hr
+			form(id='code-form', method='POST', action='/code')
+				.form-group
+					label(for='code') Code
+					input(type='text', name='code', class='form-control', id='code', 
+						placeholder='Enter your numeric Code here', required, data-required-msg='Code is required' ,maxlength=3, minlength=3)
+				.form-group
+					button.btn.btn-default Login
+			a(href="key") Forgot your key?
+			br
+			a(href="logout") Logout
+			br
+			br
+			h3 example:
+			br
+			p If your key was: ABC
+			br
+			p Code :0 - QRYM
+				b B
+			p Code :1 - FGLZ
+				b A 
+			p Code :2 - HJSWT 
+			p Code :3 - XPOU
+				b C 
+			p Code :4 - KNEDI 
+			p You need to enter: 
+				strong 103
+		script(src='//code.jquery.com/jquery-1.9.1.min.js')
+		
+	

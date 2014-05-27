@@ -1,0 +1,24 @@
+html
+	head
+		title Dashboard :: Key
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.common.min.css')
+		link(rel='stylesheet', href='//cdn.kendostatic.com/2013.3.1119/styles/kendo.bootstrap.min.css')
+		link(rel='stylesheet', href='//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css')
+		link(rel='stylesheet', href='stylesheets/style.css')
+	body
+		.code.well
+			h1 Please remember us your PIN (4 numbers)
+			include messages
+			hr
+			form(id='code-form', method='POST', action='/key')
+				.form-group
+					label(for='pin') PIN
+					input(type='text', name='pin', class='form-control', id='pin', 
+						placeholder='Enter your numeric PIN here', maxlength=4, minlength=4)
+				.form-group
+					button.btn.btn-default Restore
+			a(href="code") back please
+			br
+			a(href='logout') logout
+		
+			
