@@ -48,8 +48,8 @@ app.configure(function(){
   app.set('view engine', 'jade');
   app.use(express.bodyParser());
 //express-validator
-  app.use(expressValidator());
-  app.use(express.methodOverride());
+app.use(expressValidator());
+app.use(express.methodOverride());
   //session support
   app.use(express.cookieParser());
   app.use(express.session({secret: '123456789QWERTY', cookie:{ maxAge: 60000}}));
@@ -96,7 +96,8 @@ function restrict (req,res,next) {
     //PASS
     next();
   }else{
-    //not allowed
-    res.render('login',{flash:{ type: 'alert-danger', messages: [{msg: 'you must be logged for this function'}]}});
+  //console.log(req.session.authenticated);
+  //not allowed
+  res.render('login',{flash:{ type: 'alert-danger', messages: [{msg: 'You must be logged for this function'}]}});
   }
 }

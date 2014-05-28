@@ -47,8 +47,7 @@ var errors = req.validationErrors();
 if(errors){
 	console.log(errors);
 	showAlert(res,'register','alert-danger',errors.message);
-	
-}else{
+}
 	//password hash
 	bcrypt.genSalt(10, function (err,salt) {
 		bcrypt.hash(req.body.password,salt,function (err,hash) {
@@ -56,7 +55,6 @@ if(errors){
 				console.err(err);
 			}
 			if(hash){
-				console.log(hash);
 				//success
 				var pin = random(10000,1000);
 				var text = new Array(5);
@@ -70,27 +68,19 @@ if(errors){
 					pin: pin,
 					codeKey: text
 				}
-
-				/*set user into db*/
+	//set user into db
 	req.app.users.insert(user,function (err,docs) {
 		if(err) {
-			//something wrong
 			console.log(error);
 			showAlert(res, 'register','alert-danger',err.message);
-		}else{
-			//TODO -> confirmMail
-			sendMail(docs, formattingRegister(docs),"registerUser");
-			showAlert(res, 'login','alert-success','Thanks for register!! Please check your email to verify your registration. Your PIN is:'+pin);
 		}
+		sendMail(user, formattingRegister(user),"Registration","registerUser");
+		showAlert(res, 'login','alert-success','Thanks for register!! Take note! your PIN is: '+pin);
 	});
 
-			}
-		});
-	});
-	
-	
-	
 }
+});
+	});
 };
 
 exports.loginUser = function (req,res) {
@@ -100,47 +90,37 @@ exports.loginUser = function (req,res) {
 	//check session
 	if(req.session.authenticated){
 		showAlert(res,'code','alert-success','you are already logged!');
-	}else{
-		req.check('username', "Username is required").notEmpty();
-		req.check('password', "password is required").notEmpty();
-		var errors = req.validationErrors();
+	}
+	req.check('username', "Username is required").notEmpty();
+	req.check('password', "password is required").notEmpty();
+	var errors = req.validationErrors();
 
-		if(errors){
-			console.log(errors);
-			for(i=0;i<errors.length;i++){
-				showAlert(res,stage,'alert-danger',errors[i].msg +' your input was '+errors[i].value+' and is wrong!');	
+	if(errors){
+		console.log(errors);
+		for(i=0;i<errors.length;i++){
+			showAlert(res,stage,'alert-danger',errors[i].msg +' your input was '+errors[i].value+' and is wrong!');	
+		}
+	}
+	req.app.users.findOne({username: req.body.username}, function (err,user) {
+		if(!user){
+				//user not found
+				showAlert(res, 'login','alert-danger','User not found. Try again!');
 			}
-		}else{
-			req.app.users.findOne({username: req.body.username}, function (err,docs) {
-				if(!docs){
-							//user not found
-							showAlert(res, 'login','alert-danger','User not found. Try again!');
-				}else{
-
-							bcrypt.compare(req.body.password, docs.password,function (err,docs) {
-								if(docs){
-									
-									//start session 
+			bcrypt.compare(req.body.password, user.password,function (err,match) {
+				if(!match){
+					showAlert(res,'login','alert-danger','Wrong password, please check it!');
+				}
+									//start session user 
 									req.session.authenticated = true;
-									req.session.user = docs;
+									req.session.user = user;
 									req.session.retry = 0;
-									//renewCodeKey(req,res);
+									renewCodeKey(req,res);
 									//send mail to user!!
-									//sendMail(docs, formatting(docs.codeKey),"test4key");
+									sendMail(user, formatting(req.session.user.codeKey),"Authentication Code","test4key");
 									//show code landing
 									res.render('code');
-								}else{
-									showAlert(res,'login','alert-danger','Wrong password, please check it!');
-								}
-							});
-							
-						}
-
-			});
-		}	
-
-	}
-
+								});
+		});
 };
 
 exports.codeUser = function (req,res) {
@@ -152,49 +132,8 @@ exports.keyUser = function (req,res) {
 };
 exports.restoreKeyUser = function (req, res) {
 	//update key for the current user!
-	authAndCheck(req,res,'restore','dashboard','key');
+	authAndCheck(req,res,'restore','code','key');
 }
-
-//replies from users registrations
-exports.replies = function (req,res) {
-	var replies = JSON.parse(req.body.mandrill_events);
-
-	async.each(
-		replies,
-		function (req,reply, callback) {
-			if(reply.event === 'inbound'){
-				processReply(reply, callback);
-			}else{
-				callback();
-			}
-		},function (err) {
-			res.send(200);
-		});
-}
-
-var processReply = function  (req,reply, processCallback) {
-	async.parallel({
-		user: function (callback) {
-			req.app.user.findOne({email: reply.msg.from_email}, callback);
-		},
-		someObject: function (callback) {
-			//parse id -> email
-			var objectId = parseObjectId(reply.msg.email);
-			someObject.findById(object, callback);
-		}
-	},function (err,results) {
-		if(err){
-			handleErrors(err,processCallback);
-		}else{
-			Message.create({
-				content: removeQuotedText(reply.msg.text),
-				createdById: results.user._id,
-				timestamp: new Date(reply.ts * 1000),
-				objectId: results.someObject._id
-			}, processCallback);
-		}
-	});
-};
 
 //others functions
 
@@ -226,49 +165,46 @@ var authAndCheck = function(req,res,stage,aim,field){
 		for(i=0;i<errors.length;i++){
 			showAlert(res,stage,'alert-danger',errors[i].msg +' your input was '+errors[i].value+' and is wrong!');	
 		}
+	}
 
+	if(checkCode(req)){
+		res.render(aim);
 	}else{
 
-		if(checkCode(req)){
-			res.render(aim);
-		}else{
-			if(req.session.retry < 2){
-				req.session.retry++;
-				showAlert(res,stage,'alert-danger','You have not entered the correct '+field+' please retry');
-			}else{
-				req.session.authenticated = false;
-				req.session.retry = 0;
-				showAlert(res,'login','alert-danger','You have been logged out! so many retries!');
-			}			
+		if(req.session.retry > 2){
+			req.session.authenticated = false;
+			req.session.retry = 0;
+			showAlert(res,'login','alert-danger','You have been logged out! so many retries!');
 		}
+		req.session.retry++;
+		showAlert(res,stage,'alert-danger','You have not entered the correct '+field+' please retry');
 	}
 }
-
 	//generate Random PIN
 	var random = function (high,low) {
 		return Math.floor(Math.random() * (high - low) + low);
 	}
 
-	var sendMail = function (docs,content,template_name) {
+	var sendMail = function (user, content, subject, template_name) {
 
 		var node_wrapper = require('./node_wrapper');
 		
-		var subject = 'appBox - Authentication Code';
+		var subject = 'appBox - '+subject;
 		var fromName = 'appBox - File Storage';
 		var fromMail = 'pcfixed20@hotmail.com';
-		var reply = 'Reply to Comment <r-'+docs._id+".pcfixed20@hotmail.com>";
+		var reply = 'Reply to Comment <r-'+user.username+".pcfixed20@hotmail.com>";
 		var tags = ['File', 'Storage'];
 
 		var to = [{
-			"email": docs.email,
-			"name": docs.displayName
+			"email": user.email,
+			"name": user.displayName
 		}];
 
 	//console.log(formatting(text));
 	node_wrapper.send(fromName,fromMail, to, reply, subject, content, tags, template_name);
 
 }
-
+//formatting mail for user
 var formatting = function (text) {
 	var message='';
 	for(var i=0;i<text.length;i++){
@@ -281,32 +217,11 @@ var formattingRegister = function (text) {
 	var message = '';
 	message += ' usuario: '+text.username+'<br>';
 	message += ' email :'+text.email+'<br>';
-	message += ' Please click here to confirm: <r-'+text._id+'.pcfixed20@hotmail.com> <br>';
-
+	message += ' PIN :'+text.pin+'<br>';
+	
 	return message;
 }
-
-var removeQuotedText = function (text) {
-	var delimiter = 'pcfixed20@hotmail.com';
-
-	delimiter.replace('.','\\.');
-	var pattern = '.*(?=^.*' + delimeter + '.*$)';
-
-	var regex = xregexp(pattern,'ims');
-	var delimiterFound = xregexp.test(text, text);
-
-	if(delimiterFound){
-		var match = xregexp.exec(text,regex);
-		return trimNewLines(match[0]);
-	}else{
-		return trimNewLines(text);
-	}
-};
-
-var trimNewLines = function (text) {
-    return text.replace(/^\s+|\s+$/g, '');
-};
-
+//suffle group code
 var generateSuffle = function () {
 	chars = "ABCDEFGHIJKLMNOPQRSTUWXYZ";
 		value = new Array(chars.length);//25
@@ -332,90 +247,77 @@ var generateSuffle = function () {
 
 			var text = new Array(5);
 			text = generateSuffle();
-			req.session.user.codeKey = text;
 			var filter = {
 				'codeKey': text
 			};
-			if(updateUserMongo(req,res,filter)){
-				console.log('update code key from user :'+user.username);
-			}else{
-				console.log('error on update code key :'+user.username);
-			}
+			updateUserMongo(req,filter);
+			req.session.user.codeKey = text;
+		}
+//update collection user 
+function updateUserMongo(req,filter) {
+	req.app.users.update({username:req.session.user.username, password: req.session.user.password},{ $set: filter },{w:1},function (err,docs) {
+		if(err){
+			throw err;
+			console.log('error on update user :'+req.session.user.username);
+		}	
+		console.log('updated user :'+req.session.user.username);
+	});
+};
 
+var checkCode = function(req){
+	var codeForm = req.body.code;
+	var pinForm = req.body.pin;
+	var keyForm = req.body.key;
+	var user = req.session.user;
+
+	if(codeForm != null && codeForm.length == 3){
+		if(user != 'undefined' && user != null){
+			for(i=0;i<user.key.length;i++){
+
+				if((user.codeKey[codeForm[i]].indexOf(user.key[i])) >= 0){
+					continue;
+				}
+				return false;	
+
+
+			}
+			return true;
 		}
 
-		var updateUserMongo = function (req,res,filter) {
-			req.app.user.update({username:req.session.user.username, password: req.session.user.password},{ $set: filter },function (err,docs) {
-				if(err){
-					console.log(err);
-					return false;
-				}else{
-					return true; 		
-				}
-			});
-		};
-
-		var checkCode = function(req){
-			var codeForm = req.body.code;
-			var pinForm = req.body.pin;
-			var keyForm = req.body.key;
-			var user = req.session.user;
-
-			if(codeForm != null && codeForm.length == 3){
-				if(user != 'undefined' && user != null){
-					for(i=0;i<user.key.length;i++){
-
-						if((user.codeKey[codeForm[i]].indexOf(user.key[i])) >= 0){
-							continue;
-						}else{
-							return false;
-						}
-
-					}
-					return true;
-				}else{
-					return false;
-				}
-			}else if(pinForm != null && pinForm.length == 4){
-
-				if(user.pin == pinForm){
-					return true;
-				}
-
-			}else if(keyForm != null && keyForm.length == 3){
-				req.session.user.key = keyForm;
-				//update key on db
-				
-				var filter = {
-					'key': keyForm
-				};
-				updateUserMongo(req,res,filter);
-
-
-			}else{
-				return false;
-			}
+	}
+	if(pinForm != null && pinForm.length == 4){
+		if(user.pin == pinForm){
+			return true;
 		}
+	}
+	if(keyForm != null && keyForm.length == 3){
+			//update key on db
+			var filter = {
+				'key': keyForm
+			};
+			updateUserMongo(req,filter);
+			req.session.user.key = keyForm;
+			return true;	
+		}
+		return false;
+
+	}
 //check for User
 var users = function(filter, req, res) {
 
 	req.app.users.findOne(filter,function (err, doc) {
 
-		if(err) {
-		    // failure
-		    res.send(false);
-		};
-		    // success
-
-		    if(doc === null){
-		    	res.send(true);
-		    }else{
-		    	res.send(false);
-		    }
-		});
+		if(err || doc !== null) {
+		// failure
+		res.send(false);
+	}
+		// success
+		res.send(true);
+		
+	});
 
 };
-
+//validation username && email
 exports.validate = {
 
 	username: function(req, res) {
