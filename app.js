@@ -20,20 +20,25 @@ var options = {
 var appNotSecure = express.createServer(), 
   app = express.createServer(options);
 //mongodb
-var mongo = new mongodb.Server('127.0.0.1',27017);
-// Configuration
-new mongodb.Db('dash',mongo,{safe:false}).open(function (err, client) {
-  if (err) {throw err; };
+//var mongo = new mongodb.Server('127.0.0.1',27017);
+var mongoUri = process.env.MONGOLAB_URI ||
+  process.env.MONGOHQ_URL ||
+  'mongodb://localhost/dash';
+mongodb.connect(mongoUri, function (err,db) {
+    if (err) {throw err; };
   console.log('connected to mongodb');
-  app.users = new mongodb.Collection(client,'users');
-  //ensureIndex
-  client.ensureIndex('users','username',{unique:true}, function (err) {
+
+  app.users = db.collection('users');
+
+ //ensureIndex*/
+  app.users.ensureIndex('username',{unique:true}, function (err) {
     if (err) {throw err;};
-    client.ensureIndex('users','email',function (err) {
+    app.users.ensureIndex('email',function (err) {
       if (err) {throw err;};
       console.log('ensured indexes');
     });
   });
+});
 //all done, listen!
 var portNotSecure = process.env.PORT || 8000;
 var port = process.env.PORT || 8443;
@@ -44,9 +49,6 @@ appNotSecure.listen(portNotSecure, function(){
 app.listen(port, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
-
-});
-
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
