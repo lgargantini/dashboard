@@ -1,15 +1,32 @@
 {
-    "name": "application-name"
-  , "version": "0.0.1"
-  , "private": true
-  , "dependencies": {
-      "express": "2.5.8"
-    , "jade": ">= 0.0.1"
-    , "connect-flash" : "*"
-    , "express-validator": "*"
-    , "mongodb" : "*"
-    , "mandrill-api":"*"
-    , "email-templates":"*"
-    , "bcrypt": "*"
-  }
+  "name": "dash2fa",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "bcrypt": "*",
+    "connect-flash": "*",
+    "email-templates": "*",
+    "express": "^2.5.8",
+    "express-validator": "*",
+    "jade": ">= 0.0.1",
+    "logfmt": "^1.1.2",
+    "mandrill-api": "*",
+    "mongodb": "*"
+  },
+  "description": "dashboard =========",
+  "main": "app.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lgargantini/dashboard.git"
+  },
+  "author": "lgargantini",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lgargantini/dashboard/issues"
+  },
+  "homepage": "https://github.com/lgargantini/dashboard"
 }

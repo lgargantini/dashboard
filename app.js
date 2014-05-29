@@ -5,20 +5,20 @@
 
  var express = require('express')
  , https = require('https')
- , http = require('http')
  , fs = require('fs')
  , routes = require('./routes')
  , mongodb = require('mongodb')
  , expressValidator = require('express-validator')
  , flash = require('connect-flash');
 
-/*
+
 var options = {
   key: fs.readFileSync('sslcert/server.key'),
   cert: fs.readFileSync('sslcert/server.crt')
-}*/
+}
 
-var app = module.exports = express.createServer();
+var appNotSecure = express.createServer(), 
+  app = express.createServer(options);
 //mongodb
 var mongo = new mongodb.Server('127.0.0.1',27017);
 // Configuration
@@ -36,20 +36,23 @@ new mongodb.Db('dash',mongo,{safe:false}).open(function (err, client) {
   });
 //all done, listen!
 
-app.listen(8000, function(){
+appNotSecure.listen(8000, function(){
+  console.log("Express server listening on port %d in %s mode", appNotSecure.address().port, appNotSecure.settings.env);
+});
+app.listen(8443, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
-//http.createServer(app).listen(8000);
-//https.createServer(options,app).listen(8443);
+
 });
+
 
 app.configure(function(){
   app.set('views', __dirname + '/views');
   app.set('view engine', 'jade');
   app.use(express.bodyParser());
 //express-validator
-app.use(expressValidator());
-app.use(express.methodOverride());
+  app.use(expressValidator());
+  app.use(express.methodOverride());
   //session support
   app.use(express.cookieParser());
   app.use(express.session({secret: '123456789QWERTY', cookie:{ maxAge: 60000}}));
@@ -68,6 +71,9 @@ app.configure('production', function(){
 });
 
 // Routes
+appNotSecure.get('*', function (req,res) {
+  res.redirect('https://localhost:8443'+req.url);
+})
 //GET
 app.get('/', routes.index);
 app.get('/login', routes.login);
