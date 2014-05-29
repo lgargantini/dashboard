@@ -35,11 +35,13 @@ new mongodb.Db('dash',mongo,{safe:false}).open(function (err, client) {
     });
   });
 //all done, listen!
+var portNotSecure = process.env.PORT || 8000;
+var port = process.env.PORT || 8443;
 
-appNotSecure.listen(8000, function(){
+appNotSecure.listen(portNotSecure, function(){
   console.log("Express server listening on port %d in %s mode", appNotSecure.address().port, appNotSecure.settings.env);
 });
-app.listen(8443, function(){
+app.listen(port, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
 
