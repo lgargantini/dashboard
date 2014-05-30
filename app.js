@@ -40,12 +40,14 @@ mongodb.connect(mongoUri, function (err,db) {
   });
 });
 //all done, listen!
-var portNotSecure = process.env.PORT || 8000;
-var port = process.env.PORT || 8443;
-
+/*
+var portNotSecure = process.env.PORT || 5000;
+*/
+var port = process.env.PORT || 5000;
+/*
 appNotSecure.listen(portNotSecure, function(){
   console.log("Express server listening on port %d in %s mode", appNotSecure.address().port, appNotSecure.settings.env);
-});
+});*/
 app.listen(port, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
@@ -75,9 +77,11 @@ app.configure('production', function(){
 });
 
 // Routes
+/*
 appNotSecure.get('*', function (req,res) {
   res.redirect('https://localhost:8443'+req.url);
-})
+})*/
+
 //GET
 app.get('/', routes.index);
 app.get('/login', routes.login);
