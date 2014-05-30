@@ -41,9 +41,9 @@ mongodb.connect(mongoUri, function (err,db) {
 });
 //all done, listen!
 
-var portNotSecure = 5000;
+var portNotSecure = process.env.PORT_NOT_SECURE || 8000;
 
-var port = process.env.PORT || 5443;
+var port = process.env.PORT || 8443;
 
 appNotSecure.listen(portNotSecure, function(){
   console.log("Express server listening on port %d in %s mode", appNotSecure.address().port, appNotSecure.settings.env);
