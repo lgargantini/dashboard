@@ -80,6 +80,7 @@ app.configure('production', function(){
 
 appNotSecure.get('*', function (req,res) {
   var redir = 'https://'+formattingHost(req.headers.host)+req.url;
+  console.log(redir);
   res.redirect(redir);
 })
 
