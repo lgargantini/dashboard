@@ -12,13 +12,7 @@
  , flash = require('connect-flash');
 
 
-var options = {
-  key: fs.readFileSync('sslcert/server.key'),
-  cert: fs.readFileSync('sslcert/server.crt')
-}
-
-var app = express.createServer(options), 
-  appNotSecure = express.createServer();
+var app = express.createServer();
 //mongodb
 //var mongo = new mongodb.Server('127.0.0.1',27017);
 var mongoUri = process.env.MONGOLAB_URI ||
@@ -41,13 +35,8 @@ mongodb.connect(mongoUri, function (err,db) {
 });
 //all done, listen!
 
-var portNotSecure = process.env.PORT_NOT_SECURE || 8000;
+var port = process.env.PORT || 8000;
 
-var port = process.env.PORT || 8443;
-
-appNotSecure.listen(portNotSecure, function(){
-  console.log("Express server listening on port %d in %s mode", appNotSecure.address().port, appNotSecure.settings.env);
-});
 app.listen(port, function(){
   console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
 });
@@ -78,21 +67,6 @@ app.configure('production', function(){
 
 // Routes
 
-appNotSecure.get('*', function (req,res) {
-  var redir = 'https://'+formattingHost(req.headers.host)+req.url;
-  console.log(redir);
-  res.redirect(redir);
-})
-
-function formattingHost(header){
-  var host = '';
-  var portForm = ':'+portNotSecure;
-  if(header.indexOf(portForm) >= 0){
-    host = header.split(':');
-    return host[0]+':'+port;
-  }
-  return header;
-}
 //GET
 app.get('/', routes.index);
 app.get('/login', routes.login);
