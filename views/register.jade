@@ -24,12 +24,12 @@ html
 				.form-group
 					label(for='password') Password
 					input(type='password', name='password', class='form-control', id='password'
-						, placeholder='Enter password', required, data-required-msg='Password is required')
+						, placeholder='Enter password', required, data-required-msg='Password is required', minlength=8)
 				.form-group
 					label(for='confirm-password') Confirm Password
 					input(type='password', name='confirm-password', class='form-control', id='confirm-password',
 					 placeholder='Confirm password', required, data-required-msg='Please confirm your password' 
-					 data-matches='#password' data-matches-msg='The password do not match')
+					 data-matches='#password' data-matches-msg='The password do not match', minlength=8)
 				.form-group
 					label(for='email') Email
 					input(type='email', name='email', class='form-control', id='email', placeholder='Enter email',
